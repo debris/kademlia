@@ -1,10 +1,9 @@
 
 #pragma once
 #include <vector>
+#include <array>
 #include <algorithm>
 #include <memory>
-#include "NodeID.h"
-#include "Bucket.h"
 
 namespace kademlia
 {
