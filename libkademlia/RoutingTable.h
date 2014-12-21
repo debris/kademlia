@@ -52,14 +52,14 @@ public:
 		if (it != contacts.end())
 		{
 			contacts.erase(it);
-			contacts.push_back(_contact); // new contacts are always at the end
+			contacts.push_back(_contact); // recent contacts are always at the end
 		}
 		else
 		{
 			// check if there is enought place to
 			if (contacts.size() < bucketSize)
 				contacts.push_back(_contact);
-			else if (_bucket->depth < 5) // we shouldn't g deeper than 5
+			else if (_bucket->depth < 5) // we shouldn't go deeper than 5
 			{
 				// split the bucket to make some place for new _contact
 				splitBucket(_bucket);
@@ -67,17 +67,19 @@ public:
 				// get one of the buckets that we just created
 				auto childBucket = getBucket(_contact.node, _bucket);
 				
-				// go through all of this stuff again, cause all contacts might have the same prefix (very unlikeable, but...)
+				// go through all of this stuff again, cause all contacts might have the same prefix (rare, but...)
 				addContact(_contact, childBucket);
 			}
 			else if (pingContact(contacts.front())) // send ping to the first guy in contacts if we are on level 5
 			{
 				// move the guy to the and of vector if he responded
+				
+				// TODO: rotate
 				auto pinged = contacts.front();
 				contacts.erase(contacts.begin());
 				contacts.push_back(pinged);
 				
-				// sry, there is no place for new _contract, we drop that
+				// sry, there is no place for new _contact, we drop that
 			}
 			else
 			{
@@ -97,7 +99,8 @@ public:
 	
 	std::shared_ptr<Bucket> getBucket(NodeID const& _node, std::shared_ptr<Bucket> const& _bucket)
 	{
-		if (_bucket->left || _bucket->right) {
+		if (_bucket->left || _bucket->right)
+		{	// both of them should always be initialized
 			if (((_node[0] >> byte(7 - _bucket->depth)) & 0x1) == 0)
 				return getBucket(_node, _bucket->left);
 			return getBucket(_node, _bucket->right);
@@ -109,6 +112,8 @@ public:
 	{
 		_bucket->left.reset(new Bucket);
 		_bucket->right.reset(new Bucket);
+		_bucket->left->depth = _bucket->depth + 1;
+		_bucket->right->depth = _bucket->depth + 1;
 		auto contacts = _bucket->contacts;
 		
 		for (auto _contact: contacts)
